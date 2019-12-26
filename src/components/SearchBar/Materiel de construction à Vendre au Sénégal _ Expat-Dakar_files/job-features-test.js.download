@@ -1,0 +1,255 @@
+function CheckSubmissionForm(arg){
+
+    emailRegex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+      var txtNom = $('#txtNom').val();
+      var txtEmail = $('#txtEmail').val();
+      var txtMessage = $('#txtMessage').val();
+      var txtStudyLevel = $('#txtStudyLevel').val();
+      var txtExperiences = $('#txtExperiences').val();
+      var fileCV = $('#fileCV').val();
+      var txtPhone = document.getElementById('txtPhone').value;
+      var arr = ['70', '76', '77', '78'];
+      var warnings = [];
+
+      if ((txtPhone.length == 0 || txtPhone === '') ) {
+          warnings.push("- Vous devez saisir votre numéro de téléphone");
+      }
+      if(txtEmail.length == 0 || txtEmail === ''){
+          warnings.push("- Vous devez saisir l'adresse email"); 
+      }
+      
+      if (txtEmail.length > 0 && !emailRegex.test(txtEmail)) {
+        warnings.push("- L\'adresse email saisie n\'est pas valide. ");
+      }
+      if (txtNom.length == 0 || txtNom === '') {
+          warnings.push("- Vous devez saisir votre nom");
+      }
+      if (txtExperiences.length == 0 || txtExperiences === '') {
+          warnings.push("- Vous devez choisir le nombre d'années d'expériences");
+      }
+      if (txtStudyLevel.length == 0 || txtStudyLevel === '') {
+          warnings.push("- Vous devez choisir le niveau d'études");
+      }
+
+      if( arg ) {
+          if (fileCV.length == 0 || fileCV === '') {
+            warnings.push("- Vous devez fournir votre CV");
+          }  
+      }
+      
+      if (!$.trim(txtMessage)) {
+        warnings.push("- Vous devez saisir un message. ");
+      }else{
+          if(txtMessage.length < 100 ){
+              warnings.push("- Votre message doit comporter au moins 100 caractères"); 
+          } 
+      }
+      if ($.trim(txtPhone)) {
+        if (isNaN(txtPhone)) {
+          warnings.push("- Votre numero ne doit comporter que des chiffres. ");
+        } else if ($.inArray($.trim(txtPhone).substr(0, 2), arr) === -1) {
+          warnings.push("- Le format du numero de telephone n'est pas pris en charge dans la liste des operateurs au Senegal. ");
+        }
+      }
+
+      if (warnings.length > 0)
+          alert(warnings.join("\n"));
+
+      return warnings.length == 0;
+}
+
+$(document).ready(function() {
+	var modalRC;
+    $(document).on('change','#fileCV', function() {
+        var label  = $(this).next('label')
+        labelVal = label.html();
+        var fileName = '';
+        fileName = $(this).val().split('\\').pop();
+        if( fileName )
+          label.find( '#filePlaceHolder' ).html(fileName)
+        else
+          label.html(labelVal)
+    });
+
+    $('.listing-card__job-apply__contact-phone, .listing-item__job-apply__contact-phone').on('click', function(e) {
+		var jobcontact = unescape($(this).data('jobcontact'));
+		var jobcvrequired = $(this).data('jobcvrequired');
+		var listingId = $(this).attr('id');
+		var attr = $(this).attr('data-t-enquiry-show');
+
+		if (typeof attr !== typeof undefined && attr !== false) {
+			e.preventDefault();
+			if( $.isNumeric(jobcontact) ) {
+				$.ajax({
+					url: "/modAnnonces/ajax/test.php",
+					context: this,
+					type: 'POST',
+		            dataType: "json",
+		            data: {
+						adId: listingId,
+						phone: jobcontact
+		            }
+				}).done(function( data ) {
+					console.log(data);
+					if (data.error == false) {
+						console.log(data.error);
+						$(this).attr( "href", "tel:" + data.listing_phone);
+						$(this).html(data.listing_phone);
+						$(this).renameAttr('data-t-enquiry-show', 'data-t-enquiry-submit', false);
+					}
+				});
+			}
+		}
+	});
+
+    $('.listing-card__job-apply__contact-url, .listing-item__job-apply__contact-url').on('click', function(e) {
+    	e.preventDefault();
+    	var jobcontact = unescape($(this).data('jobcontact'))
+		var jobcvrequired = $(this).data('jobcvrequired')
+		var rurl = /^(ftp|http|https):\/\/[^ "]+$/;
+
+    	if(rurl.test(jobcontact) ) {
+			window.open(jobcontact, '_blank');
+		}
+    });
+
+    $('.listing-card__job-apply__contact-email, .listing-item__job-apply__contact-email').on('click', function(e) {
+    	e.preventDefault();
+    	var jobcontact = unescape($(this).data('jobcontact'));
+		var jobcvrequired = $(this).data('jobcvrequired');
+		var remail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+    	if(remail.test(jobcontact)) {
+    		/* Set data attributes */
+            $('#job-apply').attr("data-t-enquiry_id", $(this).data("t-enquiry_id"));
+			$('#job-apply').attr("data-t-user_id", $(this).data("t-user_id"));
+			$('#job-apply').attr("data-t-listing_user_id", $(this).data("t-listing_user_id"));
+			$('#job-apply').attr("data-t-listing_id", $(this).data("t-listing_id"));
+			$('#job-apply').attr("data-t-listing_business_id", $(this).data("t-listing_business_id"));
+			$('#job-apply').attr("data-t-listing_slug", $(this).data("t-listing_slug"));
+			$('#job-apply').attr("data-t-listing_category_slug", $(this).data("t-listing_category_slug"));
+			$('#job-apply').attr("data-t-category_slug", $(this).data("t-category_slug"));
+			$('#job-apply').attr("data-t-listing_price", $(this).data("t-listing_price"));
+			$('#job-apply').attr("data-t-listing_currency", $(this).data("t-listing_currency"));
+			$('#job-apply').attr("data-t-contact_context", $(this).data("t-contact_context"));
+			$('#job-apply').attr("data-t-listing_type", $(this).data("t-listing_type"));
+			$('#job-apply').attr("data-t-contact_type", $(this).data("t-contact_type"));
+			$('#job-apply').attr("data-t-listing_source", $(this).data("t-listing_source"));
+			$('#job-apply').attr("data-t-listing_product_slugs", $(this).data("t-listing_product_slugs"));
+            /* Set data attributes */
+
+            var html_element = 'html_element_' + this.id;
+			$('[name=objectId]').val(this.id);
+			$('#job-apply').attr("enctype","multipart/form-data")
+			$('#job-apply-send').attr("data-cvrequired",jobcvrequired)
+
+			$.ajax({
+				url:"/modAnnonces/contact-job-owner.php",
+				type:'POST',
+				dataType:"json",
+				data: 'adId='+ $('[name=objectId]').val()
+			}).done(function(data) {
+				if (data.success) {
+					$("#job-modal-title").html(data.modalTitle);
+					$("#job-apply-form").html(data.contactSellerForm);
+					modalRC = grecaptcha.render(html_element, {
+						'sitekey' : '6LdeNNcSAAAAAIS5RcrXJz5rVwwRF_HhshhH3xo0'
+					});
+					setTimeout(function(){},100);
+					$('#job-apply_listings_page').modal('show');
+				} else {
+					alert('Erreur survenue !');
+				}
+			}).fail(function(jqXHR, textStatus, errorThrown){
+				alert("Erreur survenue !");
+			});
+		}
+	});
+
+	/*$(document).on('submit', '#job-apply', function(e) {
+		e.preventDefault();
+		if (CheckSubmissionForm($('#job-apply-send').data('cvrequired'))) {
+		    var $button =  $('#job-apply-send');
+		    var buttonText = $button.html();
+			$.ajax({
+				url:"/modAnnonces/contact-job-owner-send.php",
+				type: 'POST',
+				data: new FormData($('#job-apply')[0]),
+				dataType: 'json',
+				cache: false,
+				contentType: false,
+				processData: false,
+                beforeSend:function(){
+				 $button.prop('disabled',true);
+				 $button.html('<i class="fa fa-spinner fa-spin"></i> Patientez ...');
+                },
+				success: function (response) {
+				    console.log(response);
+					if (response.success) {
+						$('#job-apply #serverResponse').html(response.message);
+						setTimeout(function() {
+							$('#job-apply_listings_page').modal('hide');
+						},3000);
+
+						// Google Analytics
+						// ga('send', 'event', 'leads', 'send enquiry listing listing  from results page', response.eventCateg + '-' + response.eventValue, '1');
+
+						// if(localStorage.getItem('job_classifieds_card_email_sent_<?= date("Y_m_d"); ?>') != 'done') {
+						// 	localStorage.setItem('job_classifieds_card_email_sent_<?= date("Y_m_d"); ?>', 'done');
+						// 	window.dataLayer = window.dataLayer || [];
+						// 	dataLayer.push({
+						// 		'userID': response.dimension1,
+						// 		'advertiserID': response.dimension2,
+						// 		'listingID': response.dimension3,
+						// 		'listingSlug': response.dimension5,
+						// 		'CategorySlug': response.dimension7,
+						// 		'event': 'leads_click_job_submit_classieds_card'
+						// 	});
+						// }
+
+						// for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+						// 	if (localStorage.key(i) != 'job_classifieds_card_email_sent_<?= date("Y_m_d"); ?>') {
+						// 		localStorage.removeItem(localStorage.key(i));
+						// 	}
+						// }
+					} else {
+						$('#job-apply #serverResponse').html(response.message);
+					}
+				}
+			}).always(function(){
+                $button.prop('disabled',false);
+                $button.html(buttonText);
+            });
+		} else {
+			//alert('Les champs doivent être emplis.')
+		}
+	});*/
+
+	$(document).on('submit', '#job-apply', function(e) {
+		e.preventDefault();
+		if (CheckSubmissionForm($('#job-apply-send').data('cvrequired'))) {
+			$.ajax({
+				url:"/modAnnonces/contact-job-owner-send.php",
+				type: 'POST',
+				data: new FormData($('#job-apply')[0]),
+				dataType: 'json',
+				cache: false,
+				contentType: false,
+				processData: false,
+				success: function (response) {
+					if (response.success) {
+						$('#job-apply #serverResponse').html(response.message);
+						setTimeout(function() {
+							$('#job-apply_listings_page').modal('hide');
+						},3000);
+					} else {
+						$('#job-apply #serverResponse').html(response.message);
+					}
+				},
+			});
+		} else {
+			alert('Les champs doivent être emplis.')
+		}
+	});
+});
